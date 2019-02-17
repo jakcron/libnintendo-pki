@@ -161,13 +161,13 @@ endif
 .PHONY: docs
 docs:
 ifneq ($(PROJECT_DOCS_PATH),)
-	doxygen $(PROJECT_DOXYFILE_PATH)
+	doxygen "$(PROJECT_DOXYFILE_PATH)"
 endif
 
 .PHONY: clean_docs
 clean_docs:
 ifneq ($(PROJECT_DOCS_PATH),)
-	@rm -rf $(PROJECT_DOCS_PATH)
+	@rm -rf "$(PROJECT_DOCS_PATH)"
 endif
 
 # Dependencies
