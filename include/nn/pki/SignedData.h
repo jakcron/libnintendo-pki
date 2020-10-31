@@ -1,6 +1,5 @@
 #pragma once
-#include <string>
-#include <fnd/IByteModel.h>
+#include <tc/types.h>
 #include <nn/pki/SignatureBlock.h>
 
 namespace nn
@@ -9,7 +8,6 @@ namespace pki
 {
 	template <class T>
 	class SignedData
-		: public fnd::IByteModel
 	{
 	public:
 		SignedData();
@@ -22,7 +20,7 @@ namespace pki
 		// export/import
 		void toBytes();
 		void fromBytes(const byte_t* src, size_t size);
-		const fnd::Vec<byte_t>& getBytes() const;
+		const tc::ByteData& getBytes() const;
 
 		// variables
 		void clear();
@@ -36,7 +34,7 @@ namespace pki
 		const std::string kModuleName = "SIGNED_DATA";
 
 		// raw binary
-		fnd::Vec<byte_t> mRawBinary;
+		tc::ByteData mRawBinary;
 
 		// variables
 		SignatureBlock mSignature;
@@ -99,7 +97,7 @@ namespace pki
 	}
 
 	template <class T>
-	inline const fnd::Vec<byte_t>& SignedData<T>::getBytes() const
+	inline const tc::ByteData& SignedData<T>::getBytes() const
 	{
 		return mRawBinary;
 	}

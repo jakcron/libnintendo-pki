@@ -1,6 +1,5 @@
 #pragma once
-#include <string>
-#include <fnd/IByteModel.h>
+#include <tc.h>
 #include <nn/pki/cert.h>
 
 namespace nn
@@ -8,7 +7,6 @@ namespace nn
 namespace pki
 {
 	class CertificateBody
-		: public fnd::IByteModel
 	{
 	public:
 		CertificateBody();
@@ -21,7 +19,7 @@ namespace pki
 		// IByteModel
 		void toBytes();
 		void fromBytes(const byte_t* src, size_t size);
-		const fnd::Vec<byte_t>& getBytes() const;
+		const tc::ByteData& getBytes() const;
 
 		// variables
 		void clear();
@@ -38,20 +36,20 @@ namespace pki
 		uint32_t getCertId() const;
 		void setCertId(uint32_t id);
 
-		const fnd::rsa::sRsa4096Key& getRsa4098PublicKey() const;
-		void setRsa4098PublicKey(const fnd::rsa::sRsa4096Key& key);
+		const tc::crypto::RsaKey& getRsa4096PublicKey() const;
+		void setRsa4096PublicKey(const tc::crypto::RsaKey& key);
 
-		const fnd::rsa::sRsa2048Key& getRsa2048PublicKey() const;
-		void setRsa2048PublicKey(const fnd::rsa::sRsa2048Key& key);
+		const tc::crypto::RsaKey& getRsa2048PublicKey() const;
+		void setRsa2048PublicKey(const tc::crypto::RsaKey& key);
 
-		const fnd::ecdsa::sEcdsa240Point& getEcdsa240PublicKey() const;
-		void setEcdsa240PublicKey(const fnd::ecdsa::sEcdsa240Point& key);
+		const nn::pki::sEcdsa233PublicKey& getEcdsa240PublicKey() const;
+		void setEcdsa240PublicKey(const nn::pki::sEcdsa233PublicKey& key);
 		
 	private:
 		const std::string kModuleName = "CERTIFICATE_BODY";
 
 		// raw binary
-		fnd::Vec<byte_t> mRawBinary;
+		tc::ByteData mRawBinary;
 
 		// variables
 		std::string mIssuer;
@@ -59,9 +57,9 @@ namespace pki
 		uint32_t mCertId;
 		cert::PublicKeyType mPublicKeyType;
 
-		fnd::rsa::sRsa4096Key mRsa4096PublicKey;
-		fnd::rsa::sRsa2048Key mRsa2048PublicKey;
-		fnd::ecdsa::sEcdsa240Point mEcdsa240PublicKey;
+		tc::crypto::RsaKey mRsa4096PublicKey;
+		tc::crypto::RsaKey mRsa2048PublicKey;
+		nn::pki::sEcdsa233PublicKey mEcdsa240PublicKey;
 	};
 }
 }

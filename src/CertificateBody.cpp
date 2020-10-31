@@ -28,9 +28,12 @@ bool nn::pki::CertificateBody::operator==(const CertificateBody& other) const
 		&& (mSubject == other.mSubject) \
 		&& (mCertId == other.mCertId) \
 		&& (mPublicKeyType == other.mPublicKeyType) \
-		&& (mRsa4096PublicKey == other.mRsa4096PublicKey) \
-		&& (mRsa2048PublicKey == other.mRsa2048PublicKey) \
-		&& (mEcdsa240PublicKey == other.mEcdsa240PublicKey);
+		&& (mRsa4096PublicKey.n == other.mRsa4096PublicKey.n) \
+		&& (mRsa4096PublicKey.e == other.mRsa4096PublicKey.e) \
+		&& (mRsa2048PublicKey.n == other.mRsa2048PublicKey.n) \
+		&& (mRsa2048PublicKey.e == other.mRsa2048PublicKey.e) \
+		&& (mEcdsa240PublicKey.r == other.mEcdsa240PublicKey.r) \
+		&& (mEcdsa240PublicKey.s == other.mEcdsa240PublicKey.s);
 }
 
 bool nn::pki::CertificateBody::operator!=(const CertificateBody& other) const
@@ -54,53 +57,51 @@ void nn::pki::CertificateBody::toBytes()
 			pubkeySize = sizeof(sEcdsa240PublicKeyBlock);
 			break;
 		default:
-			throw fnd::Exception(kModuleName, "Unknown public key type");
+			throw tc::ArgumentOutOfRangeException(kModuleName, "Unknown public key type.");
 	}
 
-	mRawBinary.alloc(sizeof(sCertificateHeader) + pubkeySize);
+	mRawBinary = tc::ByteData(sizeof(sCertificateHeader) + pubkeySize);
 	sCertificateHeader* hdr = (sCertificateHeader*)mRawBinary.data();
 
 	// copy header vars
-	strncpy(hdr->issuer, mIssuer.c_str(), cert::kIssuerSize);
-	hdr->key_type = mPublicKeyType;
-	strncpy(hdr->subject, mSubject.c_str(), cert::kSubjectSize);
-	hdr->cert_id = mCertId;
+	strncpy(hdr->issuer.data(), mIssuer.c_str(), hdr->issuer.size());
+	hdr->key_type.wrap(mPublicKeyType);
+	strncpy(hdr->subject.data(), mSubject.c_str(), hdr->subject.size());
+	hdr->cert_id.wrap(mCertId);
 
 	// copy public key
 	if (mPublicKeyType == cert::RSA4096)
 	{
 		sRsa4096PublicKeyBlock* pubkey = (sRsa4096PublicKeyBlock*)(mRawBinary.data() + sizeof(sCertificateHeader));
-		memcpy(pubkey->modulus, mRsa4096PublicKey.modulus, sizeof(mRsa4096PublicKey.modulus));
-		memcpy(pubkey->public_exponent, mRsa4096PublicKey.public_exponent, sizeof(mRsa4096PublicKey.public_exponent));
+		memcpy(pubkey->modulus.data(), mRsa4096PublicKey.n.data(), mRsa4096PublicKey.n.size());
+		memcpy(pubkey->public_exponent.data(), mRsa4096PublicKey.e.data(), mRsa4096PublicKey.e.size());
 	}
 	else if (mPublicKeyType == cert::RSA2048)
 	{
 		sRsa2048PublicKeyBlock* pubkey = (sRsa2048PublicKeyBlock*)(mRawBinary.data() + sizeof(sCertificateHeader));
-		memcpy(pubkey->modulus, mRsa2048PublicKey.modulus, sizeof(mRsa2048PublicKey.modulus));
-		memcpy(pubkey->public_exponent, mRsa2048PublicKey.public_exponent, sizeof(mRsa2048PublicKey.public_exponent));
+		memcpy(pubkey->modulus.data(), mRsa2048PublicKey.n.data(), mRsa2048PublicKey.n.size());
+		memcpy(pubkey->public_exponent.data(), mRsa2048PublicKey.e.data(), mRsa2048PublicKey.e.size());
 	}
 	else if (mPublicKeyType == cert::ECDSA240)
 	{
 		sEcdsa240PublicKeyBlock* pubkey = (sEcdsa240PublicKeyBlock*)(mRawBinary.data() + sizeof(sCertificateHeader));
-		pubkey->public_key = mEcdsa240PublicKey;
+		pubkey->r = mEcdsa240PublicKey.r;
+		pubkey->s = mEcdsa240PublicKey.s;
 	}
 }
 
 void nn::pki::CertificateBody::fromBytes(const byte_t* src, size_t size)
 {
-	clear();
+	if (src == nullptr) { throw tc::ArgumentNullException(kModuleName, "src was null."); }
+	if (size < sizeof(sCertificateHeader)) { tc::ArgumentOutOfRangeException(kModuleName, "src was too small."); }
 
-	// check minimum size
-	if (size < sizeof(sCertificateHeader))
-	{ 
-		throw fnd::Exception(kModuleName, "Certificate too small");
-	}
+	clear();
 
 	const sCertificateHeader* hdr = (const sCertificateHeader*)src;
 
 	// get public key size
 	size_t pubkeySize = 0;
-	switch (hdr->key_type.get())
+	switch (hdr->key_type.unwrap())
 	{
 		case (cert::RSA4096):
 			pubkeySize = sizeof(sRsa4096PublicKeyBlock);
@@ -112,50 +113,46 @@ void nn::pki::CertificateBody::fromBytes(const byte_t* src, size_t size)
 			pubkeySize = sizeof(sEcdsa240PublicKeyBlock);
 			break;
 		default:
-			throw fnd::Exception(kModuleName, "Unknown public key type");
+			throw tc::ArgumentOutOfRangeException(kModuleName, "Unknown public key type.");
 	}
 
 	// check total size
-	if (size < (sizeof(sCertificateHeader) + pubkeySize))
-	{ 
-		throw fnd::Exception(kModuleName, "Certificate too small");
-	}
+	if (size < (sizeof(sCertificateHeader) + pubkeySize)) { throw tc::ArgumentOutOfRangeException(kModuleName, "src was too small."); }
 
 	// save raw binary
-	mRawBinary.alloc((sizeof(sCertificateHeader) + pubkeySize));
+	mRawBinary = tc::ByteData((sizeof(sCertificateHeader) + pubkeySize));
 	memcpy(mRawBinary.data(), src, mRawBinary.size());
 
 	// save hdr variables
 	hdr = (const sCertificateHeader*)mRawBinary.data();
 
 	if (hdr->issuer[0] != 0)
-		mIssuer = std::string(hdr->issuer, _MIN(strlen(hdr->issuer), cert::kIssuerSize));
-	mPublicKeyType = (cert::PublicKeyType)hdr->key_type.get();
+		mIssuer = std::string(hdr->issuer.data(), std::min<size_t>(strlen(hdr->issuer.data()), hdr->issuer.size()));
+	mPublicKeyType = (cert::PublicKeyType)hdr->key_type.unwrap();
 	if (hdr->subject[0] != 0)
-		mSubject = std::string(hdr->subject, _MIN(strlen(hdr->subject), cert::kSubjectSize));
-	mCertId = hdr->cert_id.get();
+		mSubject = std::string(hdr->subject.data(), std::min<size_t>(strlen(hdr->subject.data()), hdr->subject.size()));
+	mCertId = hdr->cert_id.unwrap();
 
 	// save public key
 	if (mPublicKeyType == cert::RSA4096)
 	{
 		const sRsa4096PublicKeyBlock* pubkey = (const sRsa4096PublicKeyBlock*)(mRawBinary.data() + sizeof(sCertificateHeader));
-		memcpy(mRsa4096PublicKey.modulus, pubkey->modulus, sizeof(mRsa4096PublicKey.modulus));
-		memcpy(mRsa4096PublicKey.public_exponent, pubkey->public_exponent, sizeof(mRsa4096PublicKey.public_exponent));
+		mRsa4096PublicKey = tc::crypto::RsaPublicKey(pubkey->modulus.data(), pubkey->modulus.size());
 	}
 	else if (mPublicKeyType == cert::RSA2048)
 	{
 		const sRsa2048PublicKeyBlock* pubkey = (const sRsa2048PublicKeyBlock*)(mRawBinary.data() + sizeof(sCertificateHeader));
-		memcpy(mRsa2048PublicKey.modulus, pubkey->modulus, sizeof(mRsa2048PublicKey.modulus));
-		memcpy(mRsa2048PublicKey.public_exponent, pubkey->public_exponent, sizeof(mRsa2048PublicKey.public_exponent));
+		mRsa2048PublicKey = tc::crypto::RsaPublicKey(pubkey->modulus.data(), pubkey->modulus.size());
 	}
 	else if (mPublicKeyType == cert::ECDSA240)
 	{
 		const sEcdsa240PublicKeyBlock* pubkey = (const sEcdsa240PublicKeyBlock*)(mRawBinary.data() + sizeof(sCertificateHeader));
-		mEcdsa240PublicKey = pubkey->public_key;
+		mEcdsa240PublicKey.r = pubkey->r;
+		mEcdsa240PublicKey.s = pubkey->s;
 	}
 }
 
-const fnd::Vec<byte_t>& nn::pki::CertificateBody::getBytes() const
+const tc::ByteData& nn::pki::CertificateBody::getBytes() const
 {
 	return mRawBinary;
 }
@@ -168,9 +165,9 @@ void nn::pki::CertificateBody::clear()
 	mCertId = 0;
 	mPublicKeyType = cert::RSA2048;
 
-	memset(&mRsa4096PublicKey, 0, sizeof(fnd::rsa::sRsa4096Key));
-	memset(&mRsa2048PublicKey, 0, sizeof(fnd::rsa::sRsa2048Key));
-	memset(&mEcdsa240PublicKey, 0, sizeof(fnd::ecdsa::sEcdsa240Point));
+	memset(&mRsa4096PublicKey, 0, sizeof(tc::crypto::RsaKey));
+	memset(&mRsa2048PublicKey, 0, sizeof(tc::crypto::RsaKey));
+	memset(&mEcdsa240PublicKey, 0, sizeof(nn::pki::sEcdsa233PublicKey));
 }
 
 const std::string& nn::pki::CertificateBody::getIssuer() const
@@ -182,7 +179,7 @@ void nn::pki::CertificateBody::setIssuer(const std::string& issuer)
 {
 	if (issuer.size() > cert::kIssuerSize)
 	{
-		throw fnd::Exception(kModuleName, "Issuer name too long");
+		throw tc::ArgumentOutOfRangeException(kModuleName, "Issuer name too long.");
 	}
 
 	mIssuer = issuer;
@@ -207,7 +204,7 @@ void nn::pki::CertificateBody::setSubject(const std::string& subject)
 {
 	if (subject.size() > cert::kSubjectSize)
 	{
-		throw fnd::Exception(kModuleName, "Subject name too long");
+		throw tc::ArgumentOutOfRangeException(kModuleName, "Subject name too long.");
 	}
 
 	mSubject = subject;
@@ -223,32 +220,42 @@ void nn::pki::CertificateBody::setCertId(uint32_t id)
 	mCertId = id;
 }
 
-const fnd::rsa::sRsa4096Key& nn::pki::CertificateBody::getRsa4098PublicKey() const
+const tc::crypto::RsaKey& nn::pki::CertificateBody::getRsa4096PublicKey() const
 {
 	return mRsa4096PublicKey;
 }
 
-void nn::pki::CertificateBody::setRsa4098PublicKey(const fnd::rsa::sRsa4096Key& key)
+void nn::pki::CertificateBody::setRsa4096PublicKey(const tc::crypto::RsaKey& key)
 {
-	mRsa4096PublicKey = key;
+	if (key.n.size() != cert::kRsa4096Size) { throw tc::ArgumentOutOfRangeException(kModuleName, "RSA4096 public key a bad modulus size"); }
+
+	static const byte_t kPublicExponent[4] = { 0x00, 0x01, 0x00, 0x01 };
+
+	mRsa4096PublicKey.n = key.n;
+	mRsa4096PublicKey.e = tc::ByteData(kPublicExponent, sizeof(kPublicExponent));
 }
 
-const fnd::rsa::sRsa2048Key& nn::pki::CertificateBody::getRsa2048PublicKey() const
+const tc::crypto::RsaKey& nn::pki::CertificateBody::getRsa2048PublicKey() const
 {
 	return mRsa2048PublicKey;
 }
 
-void nn::pki::CertificateBody::setRsa2048PublicKey(const fnd::rsa::sRsa2048Key& key)
+void nn::pki::CertificateBody::setRsa2048PublicKey(const tc::crypto::RsaKey& key)
 {
-	mRsa2048PublicKey = key;
+	if (key.n.size() != cert::kRsa2048Size) { throw tc::ArgumentOutOfRangeException(kModuleName, "RSA2048 public key a bad modulus size"); }
+
+	static const byte_t kPublicExponent[4] = { 0x00, 0x01, 0x00, 0x01 };
+
+	mRsa2048PublicKey.n = key.n;
+	mRsa2048PublicKey.e = tc::ByteData(kPublicExponent, sizeof(kPublicExponent));
 }
 
-const fnd::ecdsa::sEcdsa240Point& nn::pki::CertificateBody::getEcdsa240PublicKey() const
+const nn::pki::sEcdsa233PublicKey& nn::pki::CertificateBody::getEcdsa240PublicKey() const
 {
 	return mEcdsa240PublicKey;
 }
 
-void nn::pki::CertificateBody::setEcdsa240PublicKey(const fnd::ecdsa::sEcdsa240Point& key)
+void nn::pki::CertificateBody::setEcdsa240PublicKey(const nn::pki::sEcdsa233PublicKey& key)
 {
 	mEcdsa240PublicKey = key;
 }

@@ -1,6 +1,7 @@
 #pragma once
-#include <string>
-#include <fnd/IByteModel.h>
+#include <tc/ByteData.h>
+#include <tc/ArgumentNullException.h>
+#include <tc/ArgumentOutOfRangeException.h>
 #include <nn/pki/sign.h>
 
 namespace nn
@@ -8,7 +9,6 @@ namespace nn
 namespace pki
 {
 	class SignatureBlock
-		: public fnd::IByteModel
 	{
 	public:
 		SignatureBlock();
@@ -21,7 +21,7 @@ namespace pki
 		// IByteModel
 		void toBytes();
 		void fromBytes(const byte_t* src, size_t size);
-		const fnd::Vec<byte_t>& getBytes() const;
+		const tc::ByteData& getBytes() const;
 
 		// variables
 		void clear();
@@ -32,20 +32,20 @@ namespace pki
 		bool isLittleEndian() const;
 		void setLittleEndian(bool isLE);
 
-		const fnd::Vec<byte_t>& getSignature() const;
-		void setSignature(const fnd::Vec<byte_t>& signature);
+		const tc::ByteData& getSignature() const;
+		void setSignature(const tc::ByteData& signature);
 	
 		
 	private:
 		const std::string kModuleName = "SIGNATURE_BLOCK";
 
 		// raw binary
-		fnd::Vec<byte_t> mRawBinary;
+		tc::ByteData mRawBinary;
 
 		// variables
 		pki::sign::SignatureId mSignType;
 		bool mIsLittleEndian;
-		fnd::Vec<byte_t> mSignature;
+		tc::ByteData mSignature;
 	};
 }
 }

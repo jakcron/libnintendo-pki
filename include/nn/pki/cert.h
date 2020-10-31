@@ -1,9 +1,6 @@
 #pragma once
-#include <string>
-#include <fnd/types.h>
-#include <fnd/aes.h>
-#include <fnd/rsa.h>
-#include <fnd/ecdsa.h>
+#include <tc/types.h>
+#include <nn/pki/ecdsa.h>
 
 namespace nn
 {
@@ -20,34 +17,38 @@ namespace pki
 
 		static const size_t kIssuerSize = 0x40;
 		static const size_t kSubjectSize = 0x40;
+		static const size_t kRsa2048Size = 0x100;
+		static const size_t kRsa4096Size = 0x200;
+		static const size_t kRsaPublicExponentSize = 4;
 	}
 #pragma pack(push,1)
 	struct sCertificateHeader
 	{
-		char issuer[cert::kIssuerSize];
+		std::array<char, cert::kIssuerSize> issuer;
 		be_uint32_t key_type;
-		char subject[cert::kSubjectSize];
+		std::array<char, cert::kSubjectSize> subject;
 		be_uint32_t cert_id;
 	};
 
 	struct sRsa4096PublicKeyBlock
 	{
-		byte_t modulus[fnd::rsa::kRsa4096Size];
-		byte_t public_exponent[fnd::rsa::kRsaPublicExponentSize];
-		byte_t padding[0x34];
+		std::array<byte_t, cert::kRsa4096Size> modulus;
+		std::array<byte_t, cert::kRsaPublicExponentSize> public_exponent;
+		std::array<byte_t, 0x34> padding;
 	};
 
 	struct sRsa2048PublicKeyBlock
 	{
-		byte_t modulus[fnd::rsa::kRsa2048Size];
-		byte_t public_exponent[fnd::rsa::kRsaPublicExponentSize];
-		byte_t padding[0x34];
+		std::array<byte_t, cert::kRsa2048Size> modulus;
+		std::array<byte_t, cert::kRsaPublicExponentSize> public_exponent;
+		std::array<byte_t, 0x34> padding;
 	};
 
 	struct sEcdsa240PublicKeyBlock
 	{
-		fnd::ecdsa::sEcdsa240Point public_key;
-		byte_t padding[0x3C];
+		ecdsa::sEcdsa233Int r;
+		ecdsa::sEcdsa233Int s;
+		std::array<byte_t, 0x3C> padding;
 	};
 #pragma pack(pop)
 }

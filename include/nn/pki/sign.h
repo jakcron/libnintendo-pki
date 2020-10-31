@@ -1,9 +1,5 @@
 #pragma once
-#include <string>
-#include <fnd/types.h>
-#include <fnd/aes.h>
-#include <fnd/rsa.h>
-#include <fnd/ecdsa.h>
+#include <nn/pki/cert.h>
 
 namespace nn
 {
@@ -43,22 +39,22 @@ namespace pki
 	struct sRsa4096SignBlock
 	{
 		be_uint32_t sign_type;
-		byte_t signature[fnd::rsa::kRsa4096Size];
-		byte_t padding[0x3C];
+		std::array<byte_t, cert::kRsa4096Size> signature;
+		std::array<byte_t, 0x3C> padding;
 	};
 
 	struct sRsa2048SignBlock
 	{
 		be_uint32_t sign_type;
-		byte_t signature[fnd::rsa::kRsa2048Size];
-		byte_t padding[0x3C];
+		std::array<byte_t, cert::kRsa2048Size> signature;
+		std::array<byte_t, 0x3C> padding;
 	};
 
 	struct sEcdsa240SignBlock
 	{
 		be_uint32_t sign_type;
-		byte_t signature[sign::kEcdsaSigSize];
-		byte_t padding[0x40];
+		std::array<byte_t, sign::kEcdsaSigSize> signature;
+		std::array<byte_t, 0x40> padding;
 	};
 #pragma pack(pop)
 }

@@ -12,17 +12,24 @@ nn::pki::SignatureBlock::SignatureBlock(const SignatureBlock& other)
 
 void nn::pki::SignatureBlock::operator=(const SignatureBlock& other)
 {
-	mRawBinary = other.mRawBinary;
-	mSignType = other.mSignType;
-	mIsLittleEndian = other.mIsLittleEndian;
-	mSignature = other.mSignature;
+	if (other.mRawBinary.data() != nullptr)
+	{
+		fromBytes(other.mRawBinary.data(), other.mRawBinary.size());
+	}
+	else
+	{
+		clear();
+		mSignType = other.mSignType;
+		mIsLittleEndian = other.mIsLittleEndian;
+		mSignature = other.mSignature;
+	}	
 }
 
 bool nn::pki::SignatureBlock::operator==(const SignatureBlock& other) const
 {
 	return (mSignType == other.mSignType) \
 		&& (mIsLittleEndian == other.mIsLittleEndian) \
-		&& (mSignature == other.mSignature);
+		&& (memcmp(mSignature.data(), other.mSignature.data(), mSignature.size()) == 0);
 }
 
 bool nn::pki::SignatureBlock::operator!=(const SignatureBlock& other) const
@@ -40,12 +47,12 @@ void nn::pki::SignatureBlock::toBytes()
 		case (sign::SIGN_ID_RSA4096_SHA1):
 		case (sign::SIGN_ID_RSA4096_SHA256):
 			totalSize = sizeof(sRsa4096SignBlock);
-			sigSize = fnd::rsa::kRsa4096Size;
+			sigSize = cert::kRsa4096Size;
 			break;
 		case (sign::SIGN_ID_RSA2048_SHA1):
 		case (sign::SIGN_ID_RSA2048_SHA256):
 			totalSize = sizeof(sRsa2048SignBlock);
-			sigSize = fnd::rsa::kRsa2048Size;
+			sigSize = cert::kRsa2048Size;
 			break;
 		case (sign::SIGN_ID_ECDSA240_SHA1):
 		case (sign::SIGN_ID_ECDSA240_SHA256):
@@ -53,23 +60,25 @@ void nn::pki::SignatureBlock::toBytes()
 			sigSize = sign::kEcdsaSigSize;
 			break;
 		default:
-			throw fnd::Exception(kModuleName, "Unknown signature type");
+			throw tc::ArgumentOutOfRangeException(kModuleName, "Unknown signature type");
 	}
 
-	if (mSignature.size() != sigSize)
-		throw fnd::Exception(kModuleName, "Signature size is incorrect");
+	if (mSignature.size() != sigSize) { throw tc::ArgumentException(kModuleName, "Signature size is incorrect"); }
 
 	// commit to binary
-	mRawBinary.alloc(totalSize);
+	mRawBinary = tc::ByteData(totalSize);
 	if (mIsLittleEndian)
-		*(le_uint32_t*)(mRawBinary.data()) = mSignType;
+		((le_uint32_t*)mRawBinary.data())->wrap(mSignType);
 	else
-		*(be_uint32_t*)(mRawBinary.data()) = mSignType;
+		((be_uint32_t*)mRawBinary.data())->wrap(mSignType);
 	memcpy(mRawBinary.data() + 4, mSignature.data(), sigSize);
 }
 
 void nn::pki::SignatureBlock::fromBytes(const byte_t* src, size_t size)
 {
+	if (src == nullptr) { throw tc::ArgumentNullException(kModuleName, "src was null."); }
+	if (size < sizeof(sEcdsa240SignBlock)) { throw tc::ArgumentOutOfRangeException(kModuleName, "src was too small."); }
+
 	clear();
 
 	size_t totalSize = 0;
@@ -77,18 +86,18 @@ void nn::pki::SignatureBlock::fromBytes(const byte_t* src, size_t size)
 	uint32_t signType = 0;
 
 	// try Big Endian sign type
-	signType = ((be_uint32_t*)src)->get();
+	signType = ((be_uint32_t*)src)->unwrap();
 	switch (signType)
 	{
 	case (sign::SIGN_ID_RSA4096_SHA1): 
 	case (sign::SIGN_ID_RSA4096_SHA256):
 		totalSize = sizeof(sRsa4096SignBlock);
-		sigSize = fnd::rsa::kRsa4096Size;
+		sigSize = cert::kRsa4096Size;
 		break;
 	case (sign::SIGN_ID_RSA2048_SHA1): 
 	case (sign::SIGN_ID_RSA2048_SHA256):
 		totalSize = sizeof(sRsa2048SignBlock);
-		sigSize = fnd::rsa::kRsa2048Size;
+		sigSize = cert::kRsa2048Size;
 		break;
 	case (sign::SIGN_ID_ECDSA240_SHA1): 
 	case (sign::SIGN_ID_ECDSA240_SHA256):
@@ -97,21 +106,21 @@ void nn::pki::SignatureBlock::fromBytes(const byte_t* src, size_t size)
 		break;
 	}
 
-	// try Big Endian sign type
+	// try Little Endian sign type
 	if (totalSize == 0)
 	{
-		signType = ((le_uint32_t*)src)->get();
+		signType = ((le_uint32_t*)src)->unwrap();
 		switch (signType)
 		{
 		case (sign::SIGN_ID_RSA4096_SHA1): 
 		case (sign::SIGN_ID_RSA4096_SHA256):
 			totalSize = sizeof(sRsa4096SignBlock);
-			sigSize = fnd::rsa::kRsa4096Size;
+			sigSize = cert::kRsa4096Size;
 			break;
 		case (sign::SIGN_ID_RSA2048_SHA1): 
 		case (sign::SIGN_ID_RSA2048_SHA256):
 			totalSize = sizeof(sRsa2048SignBlock);
-			sigSize = fnd::rsa::kRsa2048Size;
+			sigSize = cert::kRsa2048Size;
 			break;
 		case (sign::SIGN_ID_ECDSA240_SHA1): 
 		case (sign::SIGN_ID_ECDSA240_SHA256):
@@ -119,36 +128,34 @@ void nn::pki::SignatureBlock::fromBytes(const byte_t* src, size_t size)
 			sigSize = sign::kEcdsaSigSize;
 			break;
 		default:
-			throw fnd::Exception(kModuleName, "Unknown signature type");
+			throw tc::ArgumentOutOfRangeException(kModuleName, "Unknown signature type");
 		}
 
 		mIsLittleEndian = true;
 	}
 
-	if (totalSize > size)
-	{
-		throw fnd::Exception(kModuleName, "Certificate too small");
-	}
+	// check size again
+	if (size < totalSize) { throw tc::ArgumentOutOfRangeException(kModuleName, "src was too small."); }
 
-	mRawBinary.alloc(totalSize);
-	memcpy(mRawBinary.data(), src, totalSize);
+	mRawBinary  = tc::ByteData(totalSize);
+	memcpy(mRawBinary.data(), src, mRawBinary.size());
 
 	mSignType = (sign::SignatureId)signType;
-	mSignature.alloc(sigSize);
+	mSignature = tc::ByteData(sigSize);
 	memcpy(mSignature.data(), mRawBinary.data() + 4, sigSize);
 }
 
-const fnd::Vec<byte_t>& nn::pki::SignatureBlock::getBytes() const
+const tc::ByteData& nn::pki::SignatureBlock::getBytes() const
 {
 	return mRawBinary;
 }
 
 void nn::pki::SignatureBlock::clear()
 {
-	mRawBinary.clear();
+	memset(mRawBinary.data(), 0, mRawBinary.size());
 	mSignType = sign::SIGN_ID_RSA4096_SHA1;
 	mIsLittleEndian = false;
-	mSignature.clear();
+	memset(mSignature.data(), 0, mSignature.size());
 }
 
 nn::pki::sign::SignatureId nn::pki::SignatureBlock::getSignType() const
@@ -171,12 +178,12 @@ void nn::pki::SignatureBlock::setLittleEndian(bool isLE)
 	mIsLittleEndian = isLE;
 }
 
-const fnd::Vec<byte_t>& nn::pki::SignatureBlock::getSignature() const
+const tc::ByteData& nn::pki::SignatureBlock::getSignature() const
 {
 	return mSignature;
 }
 
-void nn::pki::SignatureBlock::setSignature(const fnd::Vec<byte_t>& signature)
+void nn::pki::SignatureBlock::setSignature(const tc::ByteData& signature)
 {
 	mSignature = signature;
 }
