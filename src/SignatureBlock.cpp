@@ -68,9 +68,9 @@ void nn::pki::SignatureBlock::toBytes()
 	// commit to binary
 	mRawBinary = tc::ByteData(totalSize);
 	if (mIsLittleEndian)
-		((le_uint32_t*)mRawBinary.data())->wrap(mSignType);
+		((tc::bn::le32<uint32_t>*)mRawBinary.data())->wrap(mSignType);
 	else
-		((be_uint32_t*)mRawBinary.data())->wrap(mSignType);
+		((tc::bn::be32<uint32_t>*)mRawBinary.data())->wrap(mSignType);
 	memcpy(mRawBinary.data() + 4, mSignature.data(), sigSize);
 }
 
@@ -86,7 +86,7 @@ void nn::pki::SignatureBlock::fromBytes(const byte_t* src, size_t size)
 	uint32_t signType = 0;
 
 	// try Big Endian sign type
-	signType = ((be_uint32_t*)src)->unwrap();
+	signType = ((tc::bn::be32<uint32_t>*)src)->unwrap();
 	switch (signType)
 	{
 	case (sign::SIGN_ID_RSA4096_SHA1): 
@@ -109,7 +109,7 @@ void nn::pki::SignatureBlock::fromBytes(const byte_t* src, size_t size)
 	// try Little Endian sign type
 	if (totalSize == 0)
 	{
-		signType = ((le_uint32_t*)src)->unwrap();
+		signType = ((tc::bn::le32<uint32_t>*)src)->unwrap();
 		switch (signType)
 		{
 		case (sign::SIGN_ID_RSA4096_SHA1): 

@@ -25,9 +25,9 @@ namespace pki
 	struct sCertificateHeader
 	{
 		std::array<char, cert::kIssuerSize> issuer;
-		be_uint32_t key_type;
+		tc::bn::be32<uint32_t> key_type;
 		std::array<char, cert::kSubjectSize> subject;
-		be_uint32_t cert_id;
+		tc::bn::be32<uint32_t> cert_id;
 	};
 
 	struct sRsa4096PublicKeyBlock

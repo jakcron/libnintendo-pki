@@ -38,21 +38,21 @@ namespace pki
 #pragma pack(push,1)
 	struct sRsa4096SignBlock
 	{
-		be_uint32_t sign_type;
+		tc::bn::be32<uint32_t> sign_type;
 		std::array<byte_t, cert::kRsa4096Size> signature;
 		std::array<byte_t, 0x3C> padding;
 	};
 
 	struct sRsa2048SignBlock
 	{
-		be_uint32_t sign_type;
+		tc::bn::be32<uint32_t> sign_type;
 		std::array<byte_t, cert::kRsa2048Size> signature;
 		std::array<byte_t, 0x3C> padding;
 	};
 
 	struct sEcdsa240SignBlock
 	{
-		be_uint32_t sign_type;
+		tc::bn::be32<uint32_t> sign_type;
 		std::array<byte_t, sign::kEcdsaSigSize> signature;
 		std::array<byte_t, 0x40> padding;
 	};
