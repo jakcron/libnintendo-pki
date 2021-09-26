@@ -80,7 +80,7 @@ namespace pki
 		mSignature.toBytes();
 		mBody.toBytes();
 
-		mRawBinary.alloc(mSignature.getBytes().size() + mBody.getBytes().size());
+		mRawBinary = tc::ByteData(mSignature.getBytes().size() + mBody.getBytes().size());
 
 		memcpy(mRawBinary.data(), mSignature.getBytes().data(), mSignature.getBytes().size());
 		memcpy(mRawBinary.data() + mSignature.getBytes().size(), mBody.getBytes().data(), mBody.getBytes().size());
@@ -92,7 +92,7 @@ namespace pki
 		mSignature.fromBytes(src, size);
 		mBody.fromBytes(src + mSignature.getBytes().size(), size - mSignature.getBytes().size());
 
-		mRawBinary.alloc(mSignature.getBytes().size() + mBody.getBytes().size());
+		mRawBinary = tc::ByteData(mSignature.getBytes().size() + mBody.getBytes().size());
 		memcpy(mRawBinary.data(), src, mRawBinary.size());
 	}
 
@@ -105,7 +105,7 @@ namespace pki
 	template <class T>
 	inline void SignedData<T>::clear()
 	{
-		mRawBinary.clear();
+		mRawBinary = tc::ByteData();
 		mSignature.clear();
 		mBody.clear();
 	}
