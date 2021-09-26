@@ -24,9 +24,9 @@ namespace pki
 #pragma pack(push,1)
 	struct sCertificateHeader
 	{
-		std::array<char, cert::kIssuerSize> issuer;
+		tc::bn::string<cert::kIssuerSize> issuer;
 		tc::bn::be32<uint32_t> key_type;
-		std::array<char, cert::kSubjectSize> subject;
+		tc::bn::string<cert::kSubjectSize> subject;
 		tc::bn::be32<uint32_t> cert_id;
 	};
 

@@ -64,9 +64,9 @@ void nn::pki::CertificateBody::toBytes()
 	sCertificateHeader* hdr = (sCertificateHeader*)mRawBinary.data();
 
 	// copy header vars
-	strncpy(hdr->issuer.data(), mIssuer.c_str(), hdr->issuer.size());
+	strncpy(hdr->issuer.data(), mIssuer.c_str(), hdr->issuer.max_size());
 	hdr->key_type.wrap(mPublicKeyType);
-	strncpy(hdr->subject.data(), mSubject.c_str(), hdr->subject.size());
+	strncpy(hdr->subject.data(), mSubject.c_str(), hdr->subject.max_size());
 	hdr->cert_id.wrap(mCertId);
 
 	// copy public key
@@ -126,11 +126,9 @@ void nn::pki::CertificateBody::fromBytes(const byte_t* src, size_t size)
 	// save hdr variables
 	hdr = (const sCertificateHeader*)mRawBinary.data();
 
-	if (hdr->issuer[0] != 0)
-		mIssuer = std::string(hdr->issuer.data(), std::min<size_t>(strlen(hdr->issuer.data()), hdr->issuer.size()));
+	mIssuer = hdr->issuer.str();
 	mPublicKeyType = (cert::PublicKeyType)hdr->key_type.unwrap();
-	if (hdr->subject[0] != 0)
-		mSubject = std::string(hdr->subject.data(), std::min<size_t>(strlen(hdr->subject.data()), hdr->subject.size()));
+	mSubject = hdr->subject.str();
 	mCertId = hdr->cert_id.unwrap();
 
 	// save public key
