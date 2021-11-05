@@ -1,9 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31229.75
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libnintendo-pki", "libnintendo-pki\libnintendo-pki.vcxproj", "{0BEF63A0-2801-4563-AB65-1E2FD881C3AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deps", "deps", "{D3D43182-5432-4F78-974E-4BA1A693C3A5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmbedtls", "..\..\deps\libmbedtls\build\visualstudio\libmbedtls\libmbedtls.vcxproj", "{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtoolchain", "..\..\deps\libtoolchain\build\visualstudio\libtoolchain\libtoolchain.vcxproj", "{E194E4B8-1482-40A2-901B-75D4387822E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +27,29 @@ Global
 		{0BEF63A0-2801-4563-AB65-1E2FD881C3AF}.Release|x64.Build.0 = Release|x64
 		{0BEF63A0-2801-4563-AB65-1E2FD881C3AF}.Release|x86.ActiveCfg = Release|Win32
 		{0BEF63A0-2801-4563-AB65-1E2FD881C3AF}.Release|x86.Build.0 = Release|Win32
+		{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C}.Debug|x64.ActiveCfg = Debug|x64
+		{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C}.Debug|x64.Build.0 = Debug|x64
+		{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C}.Debug|x86.ActiveCfg = Debug|Win32
+		{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C}.Debug|x86.Build.0 = Debug|Win32
+		{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C}.Release|x64.ActiveCfg = Release|x64
+		{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C}.Release|x64.Build.0 = Release|x64
+		{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C}.Release|x86.ActiveCfg = Release|Win32
+		{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C}.Release|x86.Build.0 = Release|Win32
+		{E194E4B8-1482-40A2-901B-75D4387822E9}.Debug|x64.ActiveCfg = Debug|x64
+		{E194E4B8-1482-40A2-901B-75D4387822E9}.Debug|x64.Build.0 = Debug|x64
+		{E194E4B8-1482-40A2-901B-75D4387822E9}.Debug|x86.ActiveCfg = Debug|Win32
+		{E194E4B8-1482-40A2-901B-75D4387822E9}.Debug|x86.Build.0 = Debug|Win32
+		{E194E4B8-1482-40A2-901B-75D4387822E9}.Release|x64.ActiveCfg = Release|x64
+		{E194E4B8-1482-40A2-901B-75D4387822E9}.Release|x64.Build.0 = Release|x64
+		{E194E4B8-1482-40A2-901B-75D4387822E9}.Release|x86.ActiveCfg = Release|Win32
+		{E194E4B8-1482-40A2-901B-75D4387822E9}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7A7C66F3-2B5B-4E23-85D8-2A74FEDAD92C} = {D3D43182-5432-4F78-974E-4BA1A693C3A5}
+		{E194E4B8-1482-40A2-901B-75D4387822E9} = {D3D43182-5432-4F78-974E-4BA1A693C3A5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9C08419F-26BD-4665-9F5E-6448CF9319B4}
