@@ -163,8 +163,8 @@ void nn::pki::CertificateBody::clear()
 	mCertId = 0;
 	mPublicKeyType = cert::RSA2048;
 
-	memset(&mRsa4096PublicKey, 0, sizeof(tc::crypto::RsaKey));
-	memset(&mRsa2048PublicKey, 0, sizeof(tc::crypto::RsaKey));
+	mRsa4096PublicKey = tc::crypto::RsaKey();
+	mRsa2048PublicKey = tc::crypto::RsaKey();
 	memset(&mEcdsa240PublicKey, 0, sizeof(nn::pki::sEcdsa233PublicKey));
 }
 
